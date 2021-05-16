@@ -13,9 +13,35 @@ const client = new mongoclient(connetion,{
     useUnifiedTopology : true
 })
 
-client.connect((err, connectedClient) => {
-    if (err) throw err;
-    const db = connectedClient.db("book shop")
+app.use(express.json)
+
+
+app.get('/books', (req, res) => {
+    client.connect((err, connectedClient) => {
+        if (err) return res.status(500).json({message: err.message});
+        const db = connectedClient.db("bookshop")
+        db.collection("bookshop").find({}).toArray((err, result) => {
+            if (err) {return res.status(500).json({message: err});
+        } 
+        return res.status(200).json({books : result});
+        })
+    })
 })
+
+app.post('/books', (req, res) => {
+    client.connect((err, connectedClient) => {
+        if (err) return res.status(500).json({message: err.message});
+        const db = connectedClient.db("bookshop")
+        db.collection("bookshop").insertOne({
+            autor: req.body.autor,
+            title: req.body.title
+        },(err, res) => {
+            if (err) return res.status(500).json({message: err.message});
+            return res.status(200).json({message: "new book added"});
+        }
+        )
+    })
+})
+
 
 app.listen(5000,()=>console.log("server is up and active"))
